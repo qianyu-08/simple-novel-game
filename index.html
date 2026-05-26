@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ノベルゲーム</title>
+<style>
+body {
+  background: #111;
+  color: #eee;
+  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+#game {
+  width: 600px;
+  padding: 20px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  cursor: pointer;
+}
+
+#text {
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+#name {
+  color: #8cf;
+  margin-bottom: 10px;
+}
+</style>
+</head>
+<body>
+
+<div id="game" onclick="next()">
+  <div id="name"></div>
+  <div id="text"></div>
+</div>
+
+<script>
+const scenes = [
+  { name: "主人公", text: "目が覚めると、見知らぬ部屋にいた。" },
+  { name: "主人公", text: "ここはどこだ？スマホもない。" },
+  { name: "謎の声", text: "やっと起きたか。" },
+  { name: "主人公", text: "誰だ！どこにいる！" },
+  { name: "謎の声", text: "君は選ばれた。以上。" },
+  { name: "主人公", text: "説明が雑すぎるだろ…" },
+  { name: "", text: "──物語はここから始まる。" }
+];
+
+let index = 0;
+
+function render() {
+  document.getElementById("name").textContent = scenes[index].name;
+  document.getElementById("text").textContent = scenes[index].text;
+}
+
+function next() {
+  index++;
+  if (index >= scenes.length) index = scenes.length - 1;
+  render();
+}
+
+render();
+</script>
+
+</body>
+</html>
