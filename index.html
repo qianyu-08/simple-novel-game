@@ -2,69 +2,171 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>ノベルゲーム</title>
+<title>画像フォールバックノベル</title>
+
 <style>
 body {
-  background: #111;
-  color: #eee;
+  margin: 0;
+  background: #000;
   font-family: sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  overflow: hidden;
 }
 
-#game {
-  width: 600px;
+#bg {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(0.6);
+}
+
+#character {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 120px;
+  display: none;
+}
+
+#ui {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background: rgba(20,20,20,0.85);
+  color: #fff;
   padding: 20px;
-  border: 1px solid #444;
-  background: #1a1a1a;
+  box-sizing: border-box;
   cursor: pointer;
 }
 
 #text {
+  min-height: 60px;
   font-size: 18px;
   line-height: 1.6;
 }
 
-#name {
-  color: #8cf;
-  margin-bottom: 10px;
+#choices button {
+  margin: 5px;
+  padding: 10px;
 }
 </style>
 </head>
+
 <body>
 
-<div id="game" onclick="next()">
-  <div id="name"></div>
+<div id="bg"></div>
+<div id="character"></div>
+
+<div id="ui" onclick="next()">
   <div id="text"></div>
+  <div id="choices"></div>
 </div>
 
 <script>
-const scenes = [
-  { name: "主人公", text: "目が覚めると、見知らぬ部屋にいた。" },
-  { name: "主人公", text: "ここはどこだ？スマホもない。" },
-  { name: "謎の声", text: "やっと起きたか。" },
-  { name: "主人公", text: "誰だ！どこにいる！" },
-  { name: "謎の声", text: "君は選ばれた。以上。" },
-  { name: "主人公", text: "説明が雑すぎるだろ…" },
-  { name: "", text: "──物語はここから始まる。" }
-];
+const scenes = {
+  start: {
+    bg: "https://example.com/broken-image.jpg", // わざと壊す
+    charImg: "https://example.com/also-broken.png",
+    charEmoji: "😶",
+    text: "画像があるはずの世界に来た。",
+    next: "room"
+  },
 
-let index = 0;
+  room: {
+    bg: "https://picsum.photos/800/600?2",
+    charEmoji: "🧍",
+    text: "部屋だ。妙に静かだ。",
+    choices: [
+      { text: "進む", next: "end" }
+    ]
+  },
 
-function render() {
-  document.getElementById("name").textContent = scenes[index].name;
-  document.getElementById("text").textContent = scenes[index].text;
+  end: {
+    bg: "https://picsum.photos/800/600?3",
+    charEmoji: "👁️",
+    text: "何かに見られている気がする。",
+    next: null
+  }
+};
+
+let state = {
+  scene: "start",
+  typing: false
+};
+
+function typeText(text, cb) {
+  const el = document.getElementById("text");
+  el.textContent = "";
+  state.typing = true;
+
+  let i = 0;
+  const t = setInterval(() => {
+    el.textContent += text[i];
+    i++;
+    if (i >= text.length) {
+      clearInterval(t);
+      state.typing = false;
+      cb?.();
+    }
+  }, 30);
+}
+
+/*
+  画像ロード処理（重要）
+*/
+function loadImageWithFallback(src, emoji) {
+  const img = new Image();
+  const char = document.getElementById("character");
+
+  img.onload = () => {
+    char.style.display = "none";
+    char.textContent = "";
+    char.style.backgroundImage = `url(${src})`;
+  };
+
+  img.onerror = () => {
+    char.style.display = "block";
+    char.textContent = emoji || "❓";
+  };
+
+  img.src = src;
+}
+
+function show(sceneKey) {
+  const scene = scenes[sceneKey];
+  state.scene = sceneKey;
+
+  document.getElementById("bg").style.backgroundImage =
+    `url(${scene.bg})`;
+
+  loadImageWithFallback(scene.charImg, scene.charEmoji);
+
+  document.getElementById("choices").innerHTML = "";
+
+  typeText(scene.text, () => {
+    if (scene.choices) {
+      const box = document.getElementById("choices");
+
+      scene.choices.forEach(c => {
+        const b = document.createElement("button");
+        b.textContent = c.text;
+        b.onclick = () => show(c.next);
+        box.appendChild(b);
+      });
+    }
+  });
 }
 
 function next() {
-  index++;
-  if (index >= scenes.length) index = scenes.length - 1;
-  render();
+  if (state.typing) return;
+  const scene = scenes[state.scene];
+  if (scene.choices) return;
+  if (scene.next) show(scene.next);
 }
 
-render();
+show(state.scene);
 </script>
 
 </body>
